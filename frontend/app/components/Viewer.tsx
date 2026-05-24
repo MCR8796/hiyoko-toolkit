@@ -8,43 +8,33 @@ export default function Viewer() {
   const [history, setHistory] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  function buildImageUrl(target: string) {
-    return `/images/${target}.png`;
-  }
-
   async function searchImage(value?: string) {
     const target = value ?? num;
 
-    if (!target || target.trim() === "") return;
+    if (!target.trim()) return;
 
     setLoading(true);
 
-    try {
-      // APIは「存在確認だけ」
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/image/${target}`
-      );
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/image/${target}`
+    );
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (data.image) {
-        // ★画像はVercelから直接読む
-        setImage(buildImageUrl(target));
-      } else {
-        setImage("");
-      }
-
-      setHistory((prev) => {
-        const filtered = prev.filter((h) => h !== target);
-        return [target, ...filtered];
-      });
-
-      setNum("");
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+    if (data.image) {
+      // GitHub / Vercel public配信を使う
+      setImage(`/images/${target}.png`);
+    } else {
+      setImage("");
     }
+
+    setHistory((prev) => {
+      const filtered = prev.filter((h) => h !== target);
+      return [target, ...filtered];
+    });
+
+    setNum("");
+    setLoading(false);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -54,18 +44,18 @@ export default function Viewer() {
   }
 
   return (
-    <main className="min-h-screen bg-[#313338] flex flex-col overflow-hidden">
+    <main className="min-h-screen flex flex-col bg-[#313338] overflow-hidden">
 
-      {/* 履歴（上固定） */}
+      {/* 履歴 */}
       <div className="p-3 flex flex-wrap gap-2 bg-[#1e1f22]">
         {history.length === 0 ? (
-          <span className="text-[#888] text-sm">履歴なし</span>
+          <span className="text-gray-400 text-sm">履歴なし</span>
         ) : (
           history.map((h, i) => (
             <button
               key={i}
               onClick={() => searchImage(h)}
-              className="px-3 py-1 bg-[#2b2d31] text-white rounded text-sm"
+              className="px-3 py-1 bg-[#2b2d31] text-white rounded"
             >
               {h}
             </button>
@@ -75,7 +65,7 @@ export default function Viewer() {
         {history.length > 0 && (
           <button
             onClick={() => setHistory([])}
-            className="px-3 py-1 bg-red-500 text-white rounded text-sm"
+            className="px-3 py-1 bg-red-500 text-white rounded"
           >
             全削除
           </button>
@@ -85,18 +75,17 @@ export default function Viewer() {
       {/* メイン */}
       <div className="flex-1 flex items-center justify-center p-3">
 
-        <div className="w-full max-w-[700px] bg-[#2b2d31] p-4 rounded-xl flex flex-col gap-4">
+        <div className="w-full max-w-[700px] bg-[#2b2d31] p-4 rounded-xl">
 
-          <h1 className="text-white text-xl">Hiyoko Viewer</h1>
+          <h1 className="text-white mb-3">Viewer</h1>
 
-          {/* 入力 */}
           <div className="flex gap-2">
             <input
               value={num}
               onChange={(e) => setNum(e.target.value)}
               onKeyDown={handleKeyDown}
+              className="flex-1 p-2 bg-[#1e1f22] text-white rounded"
               placeholder="番号入力"
-              className="flex-1 p-3 bg-[#1e1f22] text-white rounded"
             />
 
             <button
@@ -108,15 +97,14 @@ export default function Viewer() {
           </div>
 
           {/* 画像 */}
-          <div className="flex-1 flex items-center justify-center min-h-[300px]">
+          <div className="mt-4 flex items-center justify-center min-h-[300px]">
 
             {loading ? (
               <div className="w-full h-[300px] bg-[#1e1f22] animate-pulse rounded" />
             ) : image ? (
               <img
                 src={image}
-                className="max-h-[70vh] w-auto object-contain rounded"
-                alt=""
+                className="max-h-[70vh] object-contain rounded"
               />
             ) : (
               <div className="text-gray-400">画像待機中</div>
