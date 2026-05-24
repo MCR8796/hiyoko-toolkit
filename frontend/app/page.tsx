@@ -14,11 +14,11 @@ export default function Home() {
     setLoading(true);
 
     try {
-      const response = await fetch(
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/image/${target}`
       );
 
-      const data = await response.json();
+      const data = await res.json();
 
       if (data.image) {
         setImage(`${process.env.NEXT_PUBLIC_SITE_URL}${data.image}`);
@@ -30,7 +30,6 @@ export default function Home() {
     }
   }
 
-  // 検索
   async function handleSearch() {
     if (!num) return;
 
@@ -44,30 +43,26 @@ export default function Home() {
     setNum("");
   }
 
-  // 履歴クリック
-  async function handleHistoryClick(value: string) {
+  function handleHistoryClick(value: string) {
     setNum(value);
-    await fetchImage(value);
+    fetchImage(value);
   }
 
-  // 一括削除
   function clearHistory() {
     setHistory([]);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
+    if (e.key === "Enter") handleSearch();
   }
 
   return (
-    <main className="h-screen w-screen overflow-hidden bg-[#313338] flex flex-col">
+    <main className="h-screen w-screen bg-[#313338] flex flex-col">
 
-      {/* 上部（履歴） */}
-      <div className="h-[80px] bg-[#1e1f22] flex items-center px-4 gap-3 overflow-x-auto">
+      {/* 上部履歴 */}
+      <div className="h-[70px] bg-[#1e1f22] flex items-center px-4 gap-2 overflow-x-auto shrink-0">
 
-        <div className="text-white text-sm opacity-70 mr-2">
+        <div className="text-white text-sm opacity-70 mr-2 whitespace-nowrap">
           履歴:
         </div>
 
@@ -75,7 +70,7 @@ export default function Home() {
           <button
             key={i}
             onClick={() => handleHistoryClick(h)}
-            className="px-3 py-1 bg-[#2b2d31] text-white rounded text-sm hover:bg-[#3a3c42] transition whitespace-nowrap"
+            className="px-3 py-1 bg-[#2b2d31] text-white rounded text-sm whitespace-nowrap"
           >
             {h}
           </button>
@@ -84,16 +79,15 @@ export default function Home() {
         {history.length > 0 && (
           <button
             onClick={clearHistory}
-            className="ml-auto px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition"
+            className="ml-auto px-3 py-1 bg-red-500 text-white rounded text-sm"
           >
             全削除
           </button>
         )}
-
       </div>
 
-      {/* メインエリア */}
-      <div className="flex-1 flex justify-center items-center">
+      {/* メイン */}
+      <div className="flex-1 flex justify-center items-start p-6 overflow-hidden">
 
         <div className="bg-[#2b2d31] p-6 rounded-xl w-full max-w-[700px]">
 
@@ -103,13 +97,11 @@ export default function Home() {
 
           {/* 入力 */}
           <div className="flex gap-3">
-
             <input
               type="number"
               value={num}
               onChange={(e) => setNum(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="数字入力"
               className="flex-1 bg-[#1e1f22] text-white p-3 rounded outline-none"
             />
 
@@ -119,7 +111,6 @@ export default function Home() {
             >
               表示
             </button>
-
           </div>
 
           {/* 画像 */}
