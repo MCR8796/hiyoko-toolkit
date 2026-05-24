@@ -7,22 +7,20 @@ const app = express();
 
 app.use(cors());
 
-app.get("/", (req,res)=>{
-    res.send("Hiyoko API Running");
+app.get("/", (req, res) => {
+  res.send("Hiyoko API Running");
 });
 
-app.get("/image/:num",(req,res)=>{
+app.get("/image/:num", (req, res) => {
+  const num = req.params.num;
 
-    const num=req.params.num;
-
-    res.json({
-        image:imageMap[num] || null
-    });
-
+  res.json({
+    image: imageMap[num] || null
+  });
 });
 
 const PORT = process.env.PORT || 3001;
 
-app.listen(PORT,()=>{
-    console.log("server start");
+app.listen(PORT, () => {
+  console.log(`server start: ${PORT}`);
 });
