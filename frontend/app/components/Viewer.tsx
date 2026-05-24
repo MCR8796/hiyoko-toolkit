@@ -8,6 +8,10 @@ export default function Viewer() {
   const [history, setHistory] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
+  function buildImageUrl(target: string) {
+    return `/images/${target}.png`;
+  }
+
   async function searchImage(value?: string) {
     const target = value ?? num;
 
@@ -16,6 +20,7 @@ export default function Viewer() {
     setLoading(true);
 
     try {
+      // APIは「存在確認だけ」
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/image/${target}`
       );
@@ -23,15 +28,12 @@ export default function Viewer() {
       const data = await res.json();
 
       if (data.image) {
-        // ★ここが修正ポイント（SITE_URLではなくAPI_URL）
-        setImage(
-          `${process.env.NEXT_PUBLIC_API_URL}${data.image}`
-        );
+        // ★画像はVercelから直接読む
+        setImage(buildImageUrl(target));
       } else {
         setImage("");
       }
 
-      // 履歴（重複OK）
       setHistory((prev) => {
         const filtered = prev.filter((h) => h !== target);
         return [target, ...filtered];
@@ -51,14 +53,10 @@ export default function Viewer() {
     }
   }
 
-  function onClickHistory(h: string) {
-    searchImage(h);
-  }
-
   return (
     <main className="min-h-screen bg-[#313338] flex flex-col overflow-hidden">
 
-      {/* 上：履歴 */}
+      {/* 履歴（上固定） */}
       <div className="p-3 flex flex-wrap gap-2 bg-[#1e1f22]">
         {history.length === 0 ? (
           <span className="text-[#888] text-sm">履歴なし</span>
@@ -66,7 +64,7 @@ export default function Viewer() {
           history.map((h, i) => (
             <button
               key={i}
-              onClick={() => onClickHistory(h)}
+              onClick={() => searchImage(h)}
               className="px-3 py-1 bg-[#2b2d31] text-white rounded text-sm"
             >
               {h}
@@ -84,7 +82,7 @@ export default function Viewer() {
         )}
       </div>
 
-      {/* 中央 */}
+      {/* メイン */}
       <div className="flex-1 flex items-center justify-center p-3">
 
         <div className="w-full max-w-[700px] bg-[#2b2d31] p-4 rounded-xl flex flex-col gap-4">
@@ -109,7 +107,7 @@ export default function Viewer() {
             </button>
           </div>
 
-          {/* 画像表示 */}
+          {/* 画像 */}
           <div className="flex-1 flex items-center justify-center min-h-[300px]">
 
             {loading ? (
@@ -117,7 +115,7 @@ export default function Viewer() {
             ) : image ? (
               <img
                 src={image}
-                className="max-h-[60vh] w-auto object-contain rounded"
+                className="max-h-[70vh] w-auto object-contain rounded"
                 alt=""
               />
             ) : (
