@@ -7,37 +7,33 @@ const path = require("path");
 
 const app = express();
 
-// セキュリティ・圧縮
 app.use(helmet());
 app.use(compression());
 
-// CORS（本番対応）
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "*",
   })
 );
 
-// 画像ディレクトリ（backend/image）
+// 画像ディレクトリ
 const IMAGE_DIR = path.join(__dirname, "image");
 
-// 静的配信（重要）
+// 静的配信（直接アクセス用）
 app.use("/images", express.static(IMAGE_DIR));
 
-// 画像キャッシュリスト
 let imageList = [];
 
 /**
- * 画像を読み込み直してキャッシュ化
+ * 画像読み込み（ファイル名は関係なく順番で管理）
  */
 function loadImages() {
   const files = fs
     .readdirSync(IMAGE_DIR)
     .filter((file) => /\.(png|jpg|jpeg|webp|gif)$/i.test(file))
     .sort((a, b) => {
-      const aNum = parseInt(a.split(".")[0], 10);
-      const bNum = parseInt(b.split(".")[0], 10);
-      return aNum - bNum;
+      // ファイル名順（日本語OK）
+      return a.localeCompare(b, "ja");
     });
 
   imageList = files.map((file, index) => ({
@@ -45,6 +41,8 @@ function loadImages() {
     file,
     path: `/images/${file}`,
   }));
+
+  console.log("loaded images:", imageList);
 }
 
 // 初回ロード
@@ -59,7 +57,7 @@ app.get("/", (req, res) => {
 
 /**
  * GET /image/:num
- * 1からの連番取得
+ * 1からの連番で取得
  */
 app.get("/image/:num", (req, res) => {
   const num = parseInt(req.params.num, 10);
@@ -77,11 +75,12 @@ app.get("/image/:num", (req, res) => {
   return res.json({
     id: item.id,
     image: item.path,
+    fileName: item.file,
   });
 });
 
 /**
- * 画像リロード（運用用）
+ * 再読み込み（画像追加したとき用）
  */
 app.get("/reload-images", (req, res) => {
   loadImages();
