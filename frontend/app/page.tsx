@@ -3,87 +3,78 @@
 import { useState } from "react";
 
 export default function Home() {
-
   const [num, setNum] = useState("");
   const [image, setImage] = useState("");
   const [history, setHistory] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  async function searchImage(value?: string) {
-
-    const target = value ?? num;
-
+  async function fetchImage(target: string) {
     if (!target) return;
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/image/${target}`
-    );
+    setLoading(true);
 
-    const data = await response.json();
-
-    if (data.image) {
-      setImage(
-        `${process.env.NEXT_PUBLIC_SITE_URL}${data.image}`
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/image/${target}`
       );
-    } else {
-      setImage("");
-    }
 
-    // 履歴追加（重複OK）
-    setHistory((prev) => [target, ...prev]);
+      const data = await response.json();
+
+      if (data.image) {
+        setImage(`${process.env.NEXT_PUBLIC_SITE_URL}${data.image}`);
+      } else {
+        setImage("");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // 入力検索（履歴追加あり）
+  async function handleSearch() {
+    if (!num) return;
+
+    await fetchImage(num);
+
+    setHistory((prev) => {
+      const filtered = prev.filter((h) => h !== num);
+      return [num, ...filtered];
+    });
 
     setNum("");
   }
 
+  // 履歴クリック（追加なし）
+  async function handleHistoryClick(value: string) {
+    setNum(value);
+    await fetchImage(value);
+  }
+
+  // ❌ 履歴削除
+  function handleDeleteHistory(value: string) {
+    setHistory((prev) => prev.filter((h) => h !== value));
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
-      searchImage();
+      handleSearch();
     }
   }
 
   return (
-
     <main className="min-h-screen bg-[#313338] flex">
 
       {/* サイドバー */}
-      <div className="
-        w-[72px]
-        bg-[#1e1f22]
-        flex
-        flex-col
-        items-center
-        py-4
-      ">
-
-        <div className="
-          w-[48px]
-          h-[48px]
-          rounded-2xl
-          bg-[#5865F2]
-          text-white
-          flex
-          items-center
-          justify-center
-        ">
+      <div className="w-[72px] bg-[#1e1f22] flex flex-col items-center py-4">
+        <div className="w-[48px] h-[48px] rounded-2xl bg-[#5865F2] text-white flex items-center justify-center">
           H
         </div>
-
       </div>
 
       {/* メイン */}
-      <div className="
-        flex-1
-        flex
-        justify-center
-        items-center
-        p-3
-      ">
+      <div className="flex-1 flex justify-center items-center p-3">
 
-        <div className="
-          bg-[#2b2d31]
-          p-4 sm:p-8
-          rounded-xl
-          w-full max-w-[700px]
-        ">
+        <div className="bg-[#2b2d31] p-4 sm:p-8 rounded-xl w-full max-w-[700px]">
 
           <h1 className="text-white text-xl sm:text-3xl mb-5">
             Hiyoko Tool
@@ -98,26 +89,12 @@ export default function Home() {
               onChange={(e) => setNum(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="数字入力（Enterで送信）"
-              className="
-                flex-1
-                bg-[#1e1f22]
-                text-white
-                p-3
-                rounded
-                outline-none
-              "
+              className="flex-1 bg-[#1e1f22] text-white p-3 rounded outline-none"
             />
 
             <button
-              onClick={() => searchImage()}
-              className="
-                bg-[#5865F2]
-                px-5
-                rounded
-                text-white
-                hover:bg-[#4752c4]
-                transition
-              "
+              onClick={handleSearch}
+              className="bg-[#5865F2] px-5 rounded text-white"
             >
               表示
             </button>
@@ -127,29 +104,18 @@ export default function Home() {
           {/* 画像 */}
           <div className="mt-8">
 
-            {image ?
-
+            {loading ? (
+              <div className="h-[300px] bg-[#1e1f22] rounded-xl animate-pulse" />
+            ) : image ? (
               <img
                 src={image}
                 className="rounded-xl w-full shadow-lg"
-                alt=""
               />
-
-              :
-
-              <div className="
-                h-[300px]
-                bg-[#1e1f22]
-                rounded-xl
-                text-[#aaa]
-                flex
-                justify-center
-                items-center
-              ">
+            ) : (
+              <div className="h-[300px] bg-[#1e1f22] rounded-xl text-[#aaa] flex justify-center items-center">
                 画像待機中
               </div>
-
-            }
+            )}
 
           </div>
 
@@ -163,21 +129,26 @@ export default function Home() {
             <div className="flex flex-wrap gap-2">
 
               {history.map((h, i) => (
-                <button
+                <div
                   key={i}
-                  onClick={() => searchImage(h)}
-                  className="
-                    px-3 py-1
-                    bg-[#1e1f22]
-                    text-white
-                    rounded
-                    text-sm
-                    hover:bg-[#3a3c42]
-                    transition
-                  "
+                  className="flex items-center bg-[#1e1f22] rounded text-sm overflow-hidden"
                 >
-                  {h}
-                </button>
+                  {/* 本体ボタン */}
+                  <button
+                    onClick={() => handleHistoryClick(h)}
+                    className="px-3 py-1 text-white hover:bg-[#3a3c42] transition"
+                  >
+                    {h}
+                  </button>
+
+                  {/* 削除ボタン */}
+                  <button
+                    onClick={() => handleDeleteHistory(h)}
+                    className="px-2 py-1 text-red-400 hover:bg-red-500 hover:text-white transition"
+                  >
+                    ×
+                  </button>
+                </div>
               ))}
 
             </div>
@@ -185,10 +156,8 @@ export default function Home() {
           </div>
 
         </div>
-
       </div>
 
     </main>
-
   );
 }
