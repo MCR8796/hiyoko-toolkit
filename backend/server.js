@@ -7,14 +7,25 @@ const app = express();
 
 app.use(cors());
 
+// ★ 画像ディレクトリ（ここ重要）
 const IMAGE_DIR = path.join(__dirname, "public/images");
 
-// ファイル一覧取得
+/**
+ * 画像ファイル一覧取得
+ * ※毎回読む（シンプル設計）
+ */
 function getFiles() {
-  return fs.readdirSync(IMAGE_DIR);
+  const files = fs.readdirSync(IMAGE_DIR);
+
+  // pngのみ対象（安全）
+  return files.filter((f) => f.endsWith(".png"));
 }
 
-// キャラ名抽出
+/**
+ * ファイル名からキャラ名抽出
+ * 例：
+ * ディーふらぐ！_高尾部長.png → 高尾部長
+ */
 function getCharacter(filename) {
   return filename
     .replace(".png", "")
@@ -24,14 +35,24 @@ function getCharacter(filename) {
     .toLowerCase();
 }
 
-// 画像取得API
+/**
+ * 画像検索API
+ * /image/:query
+ */
 app.get("/image/:query", (req, res) => {
-  const query = req.params.query.trim().toLowerCase();
   const files = getFiles();
 
-  // ① 数字検索（インデックス扱い）
-  if (!isNaN(query)) {
-    const index = Number(query) - 1;
+  // ★ 入力正規化（超重要）
+  const raw = req.params.query;
+  const query = raw.trim().toLowerCase();
+
+  // =========================
+  // ① 数字検索（1-based index）
+  // =========================
+  const num = Number(query);
+
+  if (!isNaN(num) && Number.isInteger(num)) {
+    const index = num - 1;
     const file = files[index];
 
     return res.json({
@@ -39,10 +60,13 @@ app.get("/image/:query", (req, res) => {
     });
   }
 
+  // =========================
   // ② キャラ名検索（部分一致）
-  const found = files.find((f) =>
-    getCharacter(f).includes(query)
-  );
+  // =========================
+  const found = files.find((file) => {
+    const charName = getCharacter(file);
+    return charName.includes(query);
+  });
 
   if (found) {
     return res.json({
@@ -50,10 +74,17 @@ app.get("/image/:query", (req, res) => {
     });
   }
 
-  // ③ 作品名は無視
-  return res.json({ image: null });
+  // =========================
+  // ③ 見つからない
+  // =========================
+  return res.json({
+    image: null,
+  });
 });
 
+/**
+ * サーバ起動
+ */
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
