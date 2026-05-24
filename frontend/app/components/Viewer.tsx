@@ -7,7 +7,7 @@ export default function Viewer() {
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function searchImage() {
+  async function search() {
     if (!query.trim()) return;
 
     setLoading(true);
@@ -19,6 +19,9 @@ export default function Viewer() {
 
       const data = await res.json();
 
+      console.log("API response:", data);
+
+      // ★ここが重要（絶対そのまま使う）
       setImage(data.image || null);
     } catch (e) {
       console.error(e);
@@ -34,7 +37,7 @@ export default function Viewer() {
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && searchImage()}
+        onKeyDown={(e) => e.key === "Enter" && search()}
         placeholder="番号 or キャラ名"
         className="w-full p-3 bg-[#1e1f22] text-white rounded"
       />
@@ -45,7 +48,11 @@ export default function Viewer() {
           <div className="text-white">読み込み中...</div>
 
         ) : image ? (
-          <img src={image} className="max-h-full max-w-full object-contain" />
+          <img
+            src={image}
+            alt=""
+            className="max-h-full max-w-full object-contain"
+          />
 
         ) : (
           <div className="text-[#aaa]">画像なし</div>
