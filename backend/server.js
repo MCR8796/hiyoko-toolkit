@@ -7,6 +7,7 @@ const path = require("path");
 
 const app = express();
 
+// middleware
 app.use(helmet());
 app.use(compression());
 
@@ -16,25 +17,30 @@ app.use(
   })
 );
 
+// =========================
 // 画像ディレクトリ
-const IMAGE_DIR = path.join(__dirname, "image");
+// =========================
+const IMAGE_DIR = path.join(process.cwd(), "image");
 
 // 静的配信（直接アクセス用）
 app.use("/images", express.static(IMAGE_DIR));
 
+// =========================
+// 画像リストキャッシュ
+// =========================
 let imageList = [];
 
-/**
- * 画像読み込み（ファイル名は関係なく順番で管理）
- */
 function loadImages() {
+  if (!fs.existsSync(IMAGE_DIR)) {
+    console.error("IMAGE_DIR not found:", IMAGE_DIR);
+    imageList = [];
+    return;
+  }
+
   const files = fs
     .readdirSync(IMAGE_DIR)
     .filter((file) => /\.(png|jpg|jpeg|webp|gif)$/i.test(file))
-    .sort((a, b) => {
-      // ファイル名順（日本語OK）
-      return a.localeCompare(b, "ja");
-    });
+    .sort((a, b) => a.localeCompare(b, "ja"));
 
   imageList = files.map((file, index) => ({
     id: index + 1,
@@ -42,23 +48,23 @@ function loadImages() {
     path: `/images/${file}`,
   }));
 
-  console.log("loaded images:", imageList);
+  console.log("=== IMAGE LOAD ===");
+  console.log("IMAGE_DIR:", IMAGE_DIR);
+  console.log("FILES:", files);
+  console.log("COUNT:", imageList.length);
 }
 
 // 初回ロード
 loadImages();
 
-/**
- * ヘルスチェック
- */
+// =========================
+// API
+// =========================
 app.get("/", (req, res) => {
   res.send("Hiyoko API Running");
 });
 
-/**
- * GET /image/:num
- * 1からの連番で取得
- */
+// 1からの連番取得
 app.get("/image/:num", (req, res) => {
   const num = parseInt(req.params.num, 10);
 
@@ -79,9 +85,7 @@ app.get("/image/:num", (req, res) => {
   });
 });
 
-/**
- * 再読み込み（画像追加したとき用）
- */
+// 画像再読み込み（運用用）
 app.get("/reload-images", (req, res) => {
   loadImages();
   res.json({
@@ -90,8 +94,11 @@ app.get("/reload-images", (req, res) => {
   });
 });
 
+// =========================
+// start
+// =========================
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
-  console.log(`server start: ${PORT}`);
+  console.log("server started on port", PORT);
 });
