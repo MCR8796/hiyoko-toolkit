@@ -30,7 +30,7 @@ export default function Home() {
     }
   }
 
-  // 入力検索（履歴追加あり）
+  // 検索
   async function handleSearch() {
     if (!num) return;
 
@@ -44,15 +44,15 @@ export default function Home() {
     setNum("");
   }
 
-  // 履歴クリック（追加なし）
+  // 履歴クリック
   async function handleHistoryClick(value: string) {
     setNum(value);
     await fetchImage(value);
   }
 
-  // ❌ 履歴削除
-  function handleDeleteHistory(value: string) {
-    setHistory((prev) => prev.filter((h) => h !== value));
+  // 一括削除
+  function clearHistory() {
+    setHistory([]);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -62,21 +62,42 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#313338] flex">
+    <main className="h-screen w-screen overflow-hidden bg-[#313338] flex flex-col">
 
-      {/* サイドバー */}
-      <div className="w-[72px] bg-[#1e1f22] flex flex-col items-center py-4">
-        <div className="w-[48px] h-[48px] rounded-2xl bg-[#5865F2] text-white flex items-center justify-center">
-          H
+      {/* 上部（履歴） */}
+      <div className="h-[80px] bg-[#1e1f22] flex items-center px-4 gap-3 overflow-x-auto">
+
+        <div className="text-white text-sm opacity-70 mr-2">
+          履歴:
         </div>
+
+        {history.map((h, i) => (
+          <button
+            key={i}
+            onClick={() => handleHistoryClick(h)}
+            className="px-3 py-1 bg-[#2b2d31] text-white rounded text-sm hover:bg-[#3a3c42] transition whitespace-nowrap"
+          >
+            {h}
+          </button>
+        ))}
+
+        {history.length > 0 && (
+          <button
+            onClick={clearHistory}
+            className="ml-auto px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition"
+          >
+            全削除
+          </button>
+        )}
+
       </div>
 
-      {/* メイン */}
-      <div className="flex-1 flex justify-center items-center p-3">
+      {/* メインエリア */}
+      <div className="flex-1 flex justify-center items-center">
 
-        <div className="bg-[#2b2d31] p-4 sm:p-8 rounded-xl w-full max-w-[700px]">
+        <div className="bg-[#2b2d31] p-6 rounded-xl w-full max-w-[700px]">
 
-          <h1 className="text-white text-xl sm:text-3xl mb-5">
+          <h1 className="text-white text-2xl mb-5 text-center">
             Hiyoko Tool
           </h1>
 
@@ -88,7 +109,7 @@ export default function Home() {
               value={num}
               onChange={(e) => setNum(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="数字入力（Enterで送信）"
+              placeholder="数字入力"
               className="flex-1 bg-[#1e1f22] text-white p-3 rounded outline-none"
             />
 
@@ -102,7 +123,7 @@ export default function Home() {
           </div>
 
           {/* 画像 */}
-          <div className="mt-8">
+          <div className="mt-6">
 
             {loading ? (
               <div className="h-[300px] bg-[#1e1f22] rounded-xl animate-pulse" />
@@ -116,42 +137,6 @@ export default function Home() {
                 画像待機中
               </div>
             )}
-
-          </div>
-
-          {/* 履歴 */}
-          <div className="mt-6">
-
-            <h2 className="text-white mb-2 text-sm opacity-70">
-              履歴
-            </h2>
-
-            <div className="flex flex-wrap gap-2">
-
-              {history.map((h, i) => (
-                <div
-                  key={i}
-                  className="flex items-center bg-[#1e1f22] rounded text-sm overflow-hidden"
-                >
-                  {/* 本体ボタン */}
-                  <button
-                    onClick={() => handleHistoryClick(h)}
-                    className="px-3 py-1 text-white hover:bg-[#3a3c42] transition"
-                  >
-                    {h}
-                  </button>
-
-                  {/* 削除ボタン */}
-                  <button
-                    onClick={() => handleDeleteHistory(h)}
-                    className="px-2 py-1 text-red-400 hover:bg-red-500 hover:text-white transition"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-
-            </div>
 
           </div>
 
