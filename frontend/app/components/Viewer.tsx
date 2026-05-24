@@ -19,12 +19,7 @@ export default function Viewer() {
 
       const data = await res.json();
 
-      if (data.image) {
-        // ★ ここが重要（APIの値はそのまま /images/...）
-        setImage(data.image);
-      } else {
-        setImage(null);
-      }
+      setImage(data.image || null);
     } catch (e) {
       console.error(e);
       setImage(null);
@@ -50,10 +45,7 @@ export default function Viewer() {
           <div className="text-white">読み込み中...</div>
 
         ) : image ? (
-          <img
-            src={image}
-            className="max-h-full max-w-full object-contain"
-          />
+          <img src={image} className="max-h-full max-w-full object-contain" />
 
         ) : (
           <div className="text-[#aaa]">画像なし</div>
