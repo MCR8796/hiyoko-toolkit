@@ -12,15 +12,25 @@ export default function Viewer() {
 
     setLoading(true);
 
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/image/${query}`
-    );
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/image/${query}`
+      );
 
-    const data = await res.json();
+      const data = await res.json();
 
-    setImage(data.image || null);
-
-    setLoading(false);
+      if (data.image) {
+        // ★ ここが重要（APIの値はそのまま /images/...）
+        setImage(data.image);
+      } else {
+        setImage(null);
+      }
+    } catch (e) {
+      console.error(e);
+      setImage(null);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -29,9 +39,9 @@ export default function Viewer() {
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && searchImage()}
         placeholder="番号 or キャラ名"
         className="w-full p-3 bg-[#1e1f22] text-white rounded"
-        onKeyDown={(e) => e.key === "Enter" && searchImage()}
       />
 
       <div className="mt-6 h-[450px] flex items-center justify-center bg-[#1e1f22] rounded overflow-hidden">
@@ -40,7 +50,10 @@ export default function Viewer() {
           <div className="text-white">読み込み中...</div>
 
         ) : image ? (
-          <img src={image} className="max-h-full max-w-full object-contain" />
+          <img
+            src={image}
+            className="max-h-full max-w-full object-contain"
+          />
 
         ) : (
           <div className="text-[#aaa]">画像なし</div>
