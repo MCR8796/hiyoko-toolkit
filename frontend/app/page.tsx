@@ -9,7 +9,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
 
   async function fetchImage(target: string) {
-    if (!target.trim()) return;
+    if (!target) return;
 
     setLoading(true);
 
@@ -20,10 +20,11 @@ export default function Home() {
 
       const data = await res.json();
 
-      console.log("API:", data);
-
-      // ★ここが正解（絶対加工しない）
-      setImage(data.image || "");
+      if (data.image) {
+        setImage(`${process.env.NEXT_PUBLIC_SITE_URL}${data.image}`);
+      } else {
+        setImage("");
+      }
     } finally {
       setLoading(false);
     }
@@ -47,62 +48,95 @@ export default function Home() {
     fetchImage(value);
   }
 
-  return (
-    <main className="h-screen w-screen flex flex-col bg-[#313338]">
+  function clearHistory() {
+    setHistory([]);
+  }
 
-      {/* 履歴 */}
-      <div className="h-[60px] bg-[#1e1f22] flex items-center px-3 gap-2 overflow-x-auto">
-        <span className="text-white opacity-60">履歴:</span>
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") handleSearch();
+  }
+
+  return (
+    <main className="h-screen w-screen flex flex-col bg-[#313338] overflow-hidden">
+
+      {/* 履歴バー（上） */}
+      <div className="h-[60px] shrink-0 bg-[#1e1f22] flex items-center px-3 gap-2 overflow-x-auto">
+
+        <div className="text-white text-sm opacity-70 whitespace-nowrap">
+          履歴:
+        </div>
 
         {history.map((h, i) => (
           <button
             key={i}
             onClick={() => handleHistoryClick(h)}
-            className="px-2 py-1 bg-[#2b2d31] text-white rounded"
+            className="px-2 py-1 bg-[#2b2d31] text-white rounded text-sm whitespace-nowrap"
           >
             {h}
           </button>
         ))}
+
+        {history.length > 0 && (
+          <button
+            onClick={clearHistory}
+            className="ml-auto px-2 py-1 bg-red-500 text-white rounded text-sm"
+          >
+            全削除
+          </button>
+        )}
       </div>
 
-      {/* 本体 */}
-      <div className="flex-1 flex items-center justify-center p-4">
+      {/* メイン領域 */}
+      <div className="flex-1 min-h-0 flex justify-center items-start p-4">
 
-        <div className="w-full max-w-[700px] h-[80vh] bg-[#2b2d31] rounded-xl p-4 flex flex-col">
+        <div className="w-full max-w-[700px] bg-[#2b2d31] rounded-xl p-4 flex flex-col h-full">
 
-          <input
-            type="text"
-            value={num}
-            onChange={(e) => setNum(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="bg-[#1e1f22] text-white p-2 rounded"
-          />
+          {/* タイトル */}
+          <h1 className="text-white text-xl text-center mb-4">
+            Hiyoko Tool
+          </h1>
 
-          <button
-            onClick={handleSearch}
-            className="mt-2 bg-[#5865F2] text-white p-2 rounded"
-          >
-            表示
-          </button>
+          {/* 入力 */}
+          <div className="flex gap-2 shrink-0">
+            <input
+              type="number"
+              value={num}
+              onChange={(e) => setNum(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="flex-1 bg-[#1e1f22] text-white p-2 rounded outline-none"
+            />
 
-          {/* 画像 */}
-          <div className="flex-1 mt-4 flex items-center justify-center bg-[#1e1f22] rounded">
+            <button
+              onClick={handleSearch}
+              className="bg-[#5865F2] px-4 rounded text-white"
+            >
+              表示
+            </button>
+          </div>
+
+          {/* 画像エリア（ここが重要） */}
+          <div className="mt-4 flex-1 min-h-0 flex items-center justify-center">
 
             {loading ? (
-              <div className="text-white">読み込み中...</div>
+              <div className="w-full h-full bg-[#1e1f22] rounded animate-pulse" />
             ) : image ? (
-              <img
-                src={image}
-                className="max-h-full max-w-full object-contain"
-              />
+              <div className="w-full h-full flex items-center justify-center bg-[#1e1f22] rounded overflow-hidden">
+                <img
+                  src={image}
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
             ) : (
-              <div className="text-[#aaa]">画像待機中</div>
+              <div className="w-full h-full flex items-center justify-center text-[#aaa]">
+                画像待機中
+              </div>
             )}
 
           </div>
 
         </div>
       </div>
+
     </main>
   );
 }
