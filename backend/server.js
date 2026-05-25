@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
 
 const imageMap = require("./imageMap.json");
 
@@ -8,11 +9,17 @@ const app = express();
 
 app.use(cors());
 
-/* 追加：imageフォルダ公開 */
-app.use(
-  "/images",
-  express.static(path.join(__dirname, "image"))
-);
+const imageDir = path.join(__dirname, "image");
+
+console.log("imageDir =", imageDir);
+
+if (fs.existsSync(imageDir)) {
+  console.log("files =", fs.readdirSync(imageDir));
+} else {
+  console.log("image folder NOT FOUND");
+}
+
+app.use("/images", express.static(imageDir));
 
 app.get("/", (req, res) => {
   res.send("Hiyoko API Running");
