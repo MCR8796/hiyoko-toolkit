@@ -53,9 +53,14 @@ export default function Home() {
   async function handleSearch() {
     if (!num) return;
 
+    // 整数のみ許可
+    if (!/^\d+$/.test(num)) {
+      setNum("");
+      return;
+    }
+
     const success = await fetchImage(num);
 
-    // 表示成功時だけ履歴追加
     if (success) {
       setHistory((prev) => {
         const filtered = prev.filter(
