@@ -7,12 +7,10 @@ export default function Home() {
   const [image, setImage] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-
-  // 追加：拡大表示状態
   const [zoomOpen, setZoomOpen] = useState(false);
 
-  async function fetchImage(target: string) {
-    if (!target) return;
+  async function fetchImage(target: string): Promise<boolean> {
+    if (!target) return false;
 
     setLoading(true);
 
@@ -24,10 +22,20 @@ export default function Home() {
       const data = await res.json();
 
       if (data.image) {
-        setImage(`${process.env.NEXT_PUBLIC_API_URL}${data.image}`);
-      } else {
-        setImage("");
+        setImage(
+          `${process.env.NEXT_PUBLIC_API_URL}${data.image}`
+        );
+
+        return true;
       }
+
+      setImage("");
+      return false;
+
+    } catch {
+      setImage("");
+      return false;
+
     } finally {
       setLoading(false);
     }
@@ -36,12 +44,18 @@ export default function Home() {
   async function handleSearch() {
     if (!num) return;
 
-    await fetchImage(num);
+    const success = await fetchImage(num);
 
-    setHistory((prev) => {
-      const filtered = prev.filter((h) => h !== num);
-      return [num, ...filtered];
-    });
+    // 成功時だけ履歴追加
+    if (success) {
+      setHistory((prev) => {
+        const filtered = prev.filter(
+          (h) => h !== num
+        );
+
+        return [num, ...filtered];
+      });
+    }
 
     setNum("");
   }
@@ -55,8 +69,12 @@ export default function Home() {
     setHistory([]);
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") handleSearch();
+  function handleKeyDown(
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   }
 
   return (
@@ -73,7 +91,9 @@ export default function Home() {
           {history.map((h, i) => (
             <button
               key={i}
-              onClick={() => handleHistoryClick(h)}
+              onClick={() =>
+                handleHistoryClick(h)
+              }
               className="px-2 py-1 bg-[#2b2d31] text-white rounded text-sm whitespace-nowrap"
             >
               {h}
@@ -103,7 +123,9 @@ export default function Home() {
               <input
                 type="number"
                 value={num}
-                onChange={(e) => setNum(e.target.value)}
+                onChange={(e) =>
+                  setNum(e.target.value)
+                }
                 onKeyDown={handleKeyDown}
                 className="flex-1 bg-[#1e1f22] text-white p-2 rounded outline-none"
               />
@@ -125,13 +147,14 @@ export default function Home() {
 
                   <img
                     src={image}
-                    onClick={() => setZoomOpen(true)}
+                    onClick={() =>
+                      setZoomOpen(true)
+                    }
                     className="
                       max-h-full
                       max-w-full
                       object-contain
                       cursor-pointer
-                      hover:opacity-90
                     "
                   />
 
@@ -149,10 +172,11 @@ export default function Home() {
 
       </main>
 
-      {/* 拡大表示 */}
       {zoomOpen && (
         <div
-          onClick={() => setZoomOpen(false)}
+          onClick={() =>
+            setZoomOpen(false)
+          }
           className="
             fixed
             inset-0
@@ -161,12 +185,13 @@ export default function Home() {
             flex
             items-center
             justify-center
-            p-4
           "
         >
           <img
             src={image}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) =>
+              e.stopPropagation()
+            }
             className="
               max-w-[95vw]
               max-h-[95vh]
