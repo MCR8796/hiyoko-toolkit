@@ -19,21 +19,30 @@ export default function Home() {
         `${process.env.NEXT_PUBLIC_API_URL}/image/${target}`
       );
 
-      const data = await res.json();
-
-      if (data.image) {
-        setImage(
-          `${process.env.NEXT_PUBLIC_API_URL}${data.image}`
-        );
-
-        return true;
+      if (!res.ok) {
+        setImage("");
+        return false;
       }
 
-      setImage("");
-      return false;
+      const data = await res.json();
 
-    } catch {
+      if (!data.image) {
+        setImage("");
+        return false;
+      }
+
+      const imageUrl =
+        `${process.env.NEXT_PUBLIC_API_URL}${data.image}`;
+
+      setImage(imageUrl);
+
+      return true;
+
+    } catch (e) {
+      console.error(e);
+
       setImage("");
+
       return false;
 
     } finally {
@@ -46,7 +55,7 @@ export default function Home() {
 
     const success = await fetchImage(num);
 
-    // 成功時だけ履歴追加
+    // 表示成功時だけ履歴追加
     if (success) {
       setHistory((prev) => {
         const filtered = prev.filter(
@@ -61,7 +70,6 @@ export default function Home() {
   }
 
   function handleHistoryClick(value: string) {
-    setNum(value);
     fetchImage(value);
   }
 
@@ -91,9 +99,7 @@ export default function Home() {
           {history.map((h, i) => (
             <button
               key={i}
-              onClick={() =>
-                handleHistoryClick(h)
-              }
+              onClick={() => handleHistoryClick(h)}
               className="px-2 py-1 bg-[#2b2d31] text-white rounded text-sm whitespace-nowrap"
             >
               {h}
@@ -120,6 +126,7 @@ export default function Home() {
             </h1>
 
             <div className="flex gap-2 shrink-0">
+
               <input
                 type="number"
                 value={num}
@@ -127,15 +134,28 @@ export default function Home() {
                   setNum(e.target.value)
                 }
                 onKeyDown={handleKeyDown}
-                className="flex-1 bg-[#1e1f22] text-white p-2 rounded outline-none"
+                className="
+                  flex-1
+                  bg-[#1e1f22]
+                  text-white
+                  p-2
+                  rounded
+                  outline-none
+                "
               />
 
               <button
                 onClick={handleSearch}
-                className="bg-[#5865F2] px-4 rounded text-white"
+                className="
+                  bg-[#5865F2]
+                  px-4
+                  rounded
+                  text-white
+                "
               >
                 表示
               </button>
+
             </div>
 
             <div className="mt-4 flex-1 min-h-0 flex items-center justify-center">
@@ -160,7 +180,7 @@ export default function Home() {
 
                 </div>
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-[#aaa]">
+                <div className="text-[#aaa]">
                   画像待機中
                 </div>
               )}
@@ -168,8 +188,8 @@ export default function Home() {
             </div>
 
           </div>
-        </div>
 
+        </div>
       </main>
 
       {zoomOpen && (
