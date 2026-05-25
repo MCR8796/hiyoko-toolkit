@@ -21,13 +21,10 @@ export default function Home() {
       const data = await res.json();
 
       if (data.image) {
-        setImage(`${process.env.NEXT_PUBLIC_API_URL}${data.image}`);
+        setImage(`${process.env.NEXT_PUBLIC_SITE_URL}${data.image}`);
       } else {
         setImage("");
       }
-    } catch (e) {
-      console.error(e);
-      setImage("");
     } finally {
       setLoading(false);
     }
@@ -56,120 +53,88 @@ export default function Home() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
+    if (e.key === "Enter") handleSearch();
   }
 
   return (
-    <main className="h-screen bg-[#313338] p-2 flex flex-col overflow-hidden">
+    <main className="h-screen w-screen flex flex-col bg-[#313338] overflow-hidden">
 
-      {/* 上部コンパクトバー */}
-      <div className="h-[44px] bg-[#1e1f22] rounded-lg px-3 flex items-center gap-2 shrink-0">
+      {/* 履歴バー（上） */}
+      <div className="h-[60px] shrink-0 bg-[#1e1f22] flex items-center px-3 gap-2 overflow-x-auto">
 
-        {/* タイトル */}
-        <div className="text-white text-sm font-bold whitespace-nowrap">
-          Hiyoko
+        <div className="text-white text-sm opacity-70 whitespace-nowrap">
+          履歴:
         </div>
 
-        {/* 入力 */}
-        <input
-          type="number"
-          value={num}
-          onChange={(e) => setNum(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="番号"
-          className="
-            w-[80px]
-            h-[28px]
-            bg-[#2b2d31]
-            text-white
-            text-sm
-            rounded
-            px-2
-            outline-none
-          "
-        />
+        {history.map((h, i) => (
+          <button
+            key={i}
+            onClick={() => handleHistoryClick(h)}
+            className="px-2 py-1 bg-[#2b2d31] text-white rounded text-sm whitespace-nowrap"
+          >
+            {h}
+          </button>
+        ))}
 
-        {/* 表示ボタン */}
-        <button
-          onClick={handleSearch}
-          className="
-            h-[28px]
-            px-3
-            bg-[#5865F2]
-            text-white
-            text-sm
-            rounded
-          "
-        >
-          表示
-        </button>
-
-        {/* 履歴 */}
-        <div className="flex gap-1 overflow-x-auto flex-1">
-
-          {history.map((h, i) => (
-            <button
-              key={i}
-              onClick={() => handleHistoryClick(h)}
-              className="
-                px-2
-                h-[24px]
-                bg-[#2b2d31]
-                text-white
-                text-xs
-                rounded
-                whitespace-nowrap
-                shrink-0
-              "
-            >
-              {h}
-            </button>
-          ))}
-
-        </div>
-
-        {/* 全削除 */}
         {history.length > 0 && (
           <button
             onClick={clearHistory}
-            className="
-              h-[24px]
-              px-2
-              bg-[#da373c]
-              text-white
-              text-xs
-              rounded
-              shrink-0
-            "
+            className="ml-auto px-2 py-1 bg-red-500 text-white rounded text-sm"
           >
-            ×
+            全削除
           </button>
         )}
-
       </div>
 
-      {/* 画像エリア */}
-      <div className="flex-1 mt-2 min-h-0 bg-[#2b2d31] rounded-xl p-2">
+      {/* メイン領域 */}
+      <div className="flex-1 min-h-0 flex justify-center items-start p-4">
 
-        <div className="w-full h-full flex items-center justify-center">
+        <div className="w-full max-w-[700px] bg-[#2b2d31] rounded-xl p-4 flex flex-col h-full">
 
-          {loading ? (
-            <div className="w-full h-full bg-[#1e1f22] rounded animate-pulse" />
-          ) : image ? (
-            <img
-              src={image}
-              className="max-w-full max-h-full object-contain"
+          {/* タイトル */}
+          <h1 className="text-white text-xl text-center mb-4">
+            Hiyoko Tool
+          </h1>
+
+          {/* 入力 */}
+          <div className="flex gap-2 shrink-0">
+            <input
+              type="number"
+              value={num}
+              onChange={(e) => setNum(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="flex-1 bg-[#1e1f22] text-white p-2 rounded outline-none"
             />
-          ) : (
-            <div className="text-[#999] text-sm">
-              画像待機中
-            </div>
-          )}
+
+            <button
+              onClick={handleSearch}
+              className="bg-[#5865F2] px-4 rounded text-white"
+            >
+              表示
+            </button>
+          </div>
+
+          {/* 画像エリア（ここが重要） */}
+          <div className="mt-4 flex-1 min-h-0 flex items-center justify-center">
+
+            {loading ? (
+              <div className="w-full h-full bg-[#1e1f22] rounded animate-pulse" />
+            ) : image ? (
+              <div className="w-full h-full flex items-center justify-center bg-[#1e1f22] rounded overflow-hidden">
+                <img
+                  src={image}
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-[#aaa]">
+                画像待機中
+              </div>
+            )}
+
+          </div>
 
         </div>
-
       </div>
 
     </main>
