@@ -1,21 +1,38 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-
-const imageMap = require("./imageMap.json");
+const fs = require("fs");
 
 const app = express();
 
 app.use(cors());
 
+const imageDir = path.join(__dirname, "image");
+
 /*
- URL: /image/ファイル名
- 実体: backend/image/
+ imageフォルダ公開
+ URL:
+ /image/ファイル名
 */
 app.use(
   "/image",
-  express.static(path.join(__dirname, "image"))
+  express.static(imageDir)
 );
+
+/*
+ imageフォルダ内の画像一覧取得
+ 起動時1回のみ
+*/
+const imageFiles = fs
+  .readdirSync(imageDir)
+  .filter((file) =>
+    /\.(png|jpg|jpeg|gif|webp)$/i.test(file)
+  )
+  .sort((a, b) =>
+    a.localeCompare(b, "ja")
+  );
+
+console.log("画像数:", imageFiles.length);
 
 app.get("/", (req, res) => {
   res.send("Hiyoko API Running");
@@ -25,13 +42,17 @@ app.get("/image/:num", (req, res) => {
   const num = parseInt(req.params.num, 10);
 
   if (isNaN(num) || num < 1) {
-    return res.json({ image: null });
+    return res.json({
+      image: null
+    });
   }
 
-  const fileName = imageMap[num - 1];
+  const fileName = imageFiles[num - 1];
 
   if (!fileName) {
-    return res.json({ image: null });
+    return res.json({
+      image: null
+    });
   }
 
   res.json({
