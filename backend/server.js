@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const imageMap = require("./imageMap.json");
 
@@ -7,27 +8,25 @@ const app = express();
 
 app.use(cors());
 
+// 画像配信
+app.use("/images", express.static(path.join(__dirname, "image")));
+
 app.get("/", (req, res) => {
   res.send("Hiyoko API Running");
 });
 
 app.get("/image/:num", (req, res) => {
-  const num = parseInt(req.params.num, 10);
+  const num = req.params.num;
 
-  if (isNaN(num) || num < 1) {
-    return res.json({ image: null });
-  }
+  const fileName = imageMap[num];
 
-  const index = num - 1;
-  const item = imageMap.images[index];
-
-  if (!item) {
-    return res.json({ image: null });
+  if (!fileName) {
+    return res.status(404).json({ image: null });
   }
 
   res.json({
-    image: item.path,
-    id: item.id
+    id: num,
+    image: `/images/${fileName}`,
   });
 });
 
