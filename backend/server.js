@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 
-const imageMap = require("./imageMap.json");
+const imageList = require("./imageMap.json");
 
 const app = express();
 
@@ -16,9 +16,13 @@ app.get("/", (req, res) => {
 });
 
 app.get("/image/:num", (req, res) => {
-  const num = req.params.num;
+  const num = parseInt(req.params.num, 10);
 
-  const fileName = imageMap[num];
+  if (isNaN(num) || num < 1) {
+    return res.status(400).json({ image: null });
+  }
+
+  const fileName = imageList[num - 1];
 
   if (!fileName) {
     return res.status(404).json({ image: null });
